@@ -1,0 +1,87 @@
+# Adapted from https://github.com/CliMA/Oceananigans.jl/blob/main/validation/barotropic_gyre/barotropic_gyre.jl
+
+using Oceananigans
+using Oceananigans.Units
+using Oceananigans: time_step!
+using Printf
+using OffsetArrays, Enzyme
+
+grid = LatitudeLongitudeGrid(size = (60, 60, 1),
+                             longitude = (-30, 30),
+                             latitude = (15, 75),
+                             z = (-4000, 0))
+
+@inline wind_stress(λ, φ, t, p) = p.τ₀ * cos(2π * (φ - p.φ₀) / p.Lφ)
+wind_stress_bc = FluxBoundaryCondition(wind_stress, parameters = (τ₀=1e-4, Lφ=grid.Ly, φ₀=15))
+
+@inline u_bottom_drag(i, j, grid, clock, fields, μ) = @inbounds - μ * fields.u[i, j, 1]
+@inline v_bottom_drag(i, j, grid, clock, fields, μ) = @inbounds - μ * fields.v[i, j, 1]
+
+μ = 1 / 60days
+u_bottom_drag_bc = FluxBoundaryCondition(u_bottom_drag, discrete_form=true, parameters=μ)
+v_bottom_drag_bc = FluxBoundaryCondition(v_bottom_drag, discrete_form=true, parameters=μ)
+
+u_bcs = FieldBoundaryConditions(top=wind_stress_bc, bottom=u_bottom_drag_bc)
+v_bcs = FieldBoundaryConditions(bottom=v_bottom_drag_bc)
+
+νh₀ = 5e3 * (60 / grid.Nx)^2
+closure = HorizontalScalarDiffusivity(ν = νh₀)
+
+model = HydrostaticFreeSurfaceModel(; grid, closure,
+                                    free_surface = ExplicitFreeSurface(),
+                                    momentum_advection = VectorInvariant(),
+                                    coriolis = HydrostaticSphericalCoriolis(),
+                                    boundary_conditions = (u=u_bcs, v=v_bcs),
+                                    tracers = nothing,
+                                    buoyancy = nothing)
+
+# Compute stable time-step smaller than grid-scale wave phase propagation
+g = model.free_surface.gravitational_acceleration
+H = model.grid.Lz
+c = sqrt(g * H) # gravity wave speed
+Δx = minimum(grid.Δxᶜᶜᵃ[1:grid.Nx])
+Δt = 0.1 * Δx / c
+
+function ad_func(u_in, v_in, u_out, v_out)
+
+    set!(model, u = copy(u_in), v = copy(v_in))
+
+    time_step!(model, Δt)
+
+    # @show temp_u_out
+    # @show temp_v_out
+
+    u_out = model.velocities.u.data
+    v_out = model.velocities.v.data
+
+    @show maximum(u_out)
+    @show maximum(v_out)
+
+    return nothing
+
+end
+
+@info "Before taking a time step"
+@show maximum(model.velocities.u)
+
+u, v = model.velocities
+A = zeros(67,66,7)
+B = zeros(66,67,7)
+d_u_in = OffsetArray(A, -2:64, -2:63, -2:4)
+d_v_in = OffsetArray(B, -2:63, -2:64, -2:4)
+
+u_out = OffsetArray(zeros(67,66,7), -2:64, -2:63, -2:4)
+d_u_out = OffsetArray(ones(67,66,7), -2:64, -2:63, -2:4)
+
+v_out = OffsetArray(zeros(66,67,7), -2:63, -2:64, -2:4)
+d_v_out = OffsetArray(ones(66,67,7), -2:63, -2:64, -2:4)
+
+autodiff(ad_func, Duplicated(u.data, d_u_in), 
+    Duplicated(v.data, d_v_in), 
+    Duplicated(u_out, d_u_out), 
+    Duplicated(v_out, d_v_out))
+
+# ad_func(u, v, d_u_in, d_v_in)
+
+# @info "After taking a time step"
+# @show maximum(model.velocities.u)
