@@ -5,6 +5,11 @@ using Oceananigans.Units
 using Oceananigans: time_step!
 using Printf
 using OffsetArrays, Enzyme
+using Enzyme_jll
+
+Enzyme.API.looseTypeAnalysis!(true)
+
+@show Enzyme_jll.libEnzyme
 
 grid = LatitudeLongitudeGrid(size = (60, 60, 1),
                              longitude = (-30, 30),
@@ -35,6 +40,14 @@ model = HydrostaticFreeSurfaceModel(; grid, closure,
                                     tracers = nothing,
                                     buoyancy = nothing)
 
+dmodel = HydrostaticFreeSurfaceModel(; grid, closure,
+                free_surface = ExplicitFreeSurface(),
+                momentum_advection = VectorInvariant(),
+                coriolis = HydrostaticSphericalCoriolis(),
+                boundary_conditions = (u=u_bcs, v=v_bcs),
+                tracers = nothing,
+                buoyancy = nothing)
+
 # Compute stable time-step smaller than grid-scale wave phase propagation
 g = model.free_surface.gravitational_acceleration
 H = model.grid.Lz
@@ -42,20 +55,20 @@ c = sqrt(g * H) # gravity wave speed
 Δx = minimum(grid.Δxᶜᶜᵃ[1:grid.Nx])
 Δt = 0.1 * Δx / c
 
-function ad_func(u_in, v_in, u_out, v_out)
+function ad_func(model, u_in, u_out, v_in, v_out)
 
-    set!(model, u = copy(u_in), v = copy(v_in))
+    set!(model, u = u_in, v = v_in)
 
     time_step!(model, Δt)
 
     # @show temp_u_out
     # @show temp_v_out
 
-    u_out = model.velocities.u.data
-    v_out = model.velocities.v.data
+    # u_out = model.velocities.u.data
+    # v_out = model.velocities.v.data
 
-    @show maximum(u_out)
-    @show maximum(v_out)
+    #@show maximum(u_out)
+   # @show maximum(v_out)
 
     return nothing
 
@@ -76,12 +89,8 @@ d_u_out = OffsetArray(ones(67,66,7), -2:64, -2:63, -2:4)
 v_out = OffsetArray(zeros(66,67,7), -2:63, -2:64, -2:4)
 d_v_out = OffsetArray(ones(66,67,7), -2:63, -2:64, -2:4)
 
-autodiff(ad_func, Duplicated(u.data, d_u_in), 
+autodiff(ad_func, Duplicated(model, dmodel), Duplicated(u.data, d_u_in), 
     Duplicated(v.data, d_v_in), 
     Duplicated(u_out, d_u_out), 
     Duplicated(v_out, d_v_out))
 
-# ad_func(u, v, d_u_in, d_v_in)
-
-# @info "After taking a time step"
-# @show maximum(model.velocities.u)

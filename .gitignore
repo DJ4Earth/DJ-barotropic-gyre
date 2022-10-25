@@ -1,2 +1,14 @@
 Manifest.toml
 *.swp
+error.txt
+error2.txt
+error3.txt
+error4.txt
+error5.txt
+error6.txt
+error7.txt
+error8.txt
+error9.txt
+.vscode/settings.json
+LocalPreferences.toml
+Project.toml
