@@ -1,4 +1,0 @@
-[deps]
-Enzyme_jll = "7cc45869-7501-5eee-bdea-0790c847d4ef"
-Oceananigans = "9e8cae18-63c1-5223-a75c-80ca9d6e9a09"
-Printf = "de0858da-6303-5e67-8744-51eddeeeb8d7"
