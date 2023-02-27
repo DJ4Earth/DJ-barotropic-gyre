@@ -5,37 +5,51 @@ using Oceananigans.Units
 using Oceananigans: time_step!
 using Printf
 using OffsetArrays, Enzyme
-using Enzyme_jll
+using Enzyme
+# using Enzyme_jll
 
-Enzyme.API.looseTypeAnalysis!(true)
+# Enzyme.API.looseTypeAnalysis!(true)
 
-@show Enzyme_jll.libEnzyme
+# @show Enzyme_jll.libEnzyme
 
 grid = LatitudeLongitudeGrid(size = (60, 60, 1),
                              longitude = (-30, 30),
                              latitude = (15, 75),
                              z = (-4000, 0))
 
-@inline wind_stress(λ, φ, t, p) = p.τ₀ * cos(2π * (φ - p.φ₀) / p.Lφ)
-wind_stress_bc = FluxBoundaryCondition(wind_stress, parameters = (τ₀=1e-4, Lφ=grid.Ly, φ₀=15))
+#@inline wind_stress(λ, φ, t, p) = 0.0 .*( p.τ₀ * cos(2π * (φ - p.φ₀) / p.Lφ) ) 
+# wind_stress_bc = FluxBoundaryCondition(wind_stress, parameters = (τ₀=1e-4, Lφ=grid.Ly, φ₀=15))
+# wind_stress_bc = FluxBoundaryCondition(wind_stress, parameters = (τ₀=0.0, Lφ=0.0, φ₀=0.0))
+
 
 @inline u_bottom_drag(i, j, grid, clock, fields, μ) = @inbounds - μ * fields.u[i, j, 1]
 @inline v_bottom_drag(i, j, grid, clock, fields, μ) = @inbounds - μ * fields.v[i, j, 1]
 
 μ = 1 / 60days
-u_bottom_drag_bc = FluxBoundaryCondition(u_bottom_drag, discrete_form=true, parameters=μ)
-v_bottom_drag_bc = FluxBoundaryCondition(v_bottom_drag, discrete_form=true, parameters=μ)
+# u_bottom_drag_bc = FluxBoundaryCondition(u_bottom_drag, discrete_form=true, parameters=μ)
+u_bottom_drag_bc = ValueBoundaryCondition(0.0)
 
-u_bcs = FieldBoundaryConditions(top=wind_stress_bc, bottom=u_bottom_drag_bc)
+#v_bottom_drag_bc = FluxBoundaryCondition(v_bottom_drag, discrete_form=true, parameters=μ)
+v_bottom_drag_bc = ValueBoundaryCondition(0.0)
+
+u_bcs = FieldBoundaryConditions(top=u_bottom_drag_bc, bottom=u_bottom_drag_bc)
 v_bcs = FieldBoundaryConditions(bottom=v_bottom_drag_bc)
 
 νh₀ = 5e3 * (60 / grid.Nx)^2
 closure = HorizontalScalarDiffusivity(ν = νh₀)
 
+# model = HydrostaticFreeSurfaceModel(; grid, closure,
+#                                     free_surface = ExplicitFreeSurface(),
+#                                     momentum_advection = VectorInvariant(),
+#                                     coriolis = HydrostaticSphericalCoriolis(),
+#                                     boundary_conditions = (u=u_bcs, v=v_bcs),
+#                                     tracers = nothing,
+#                                     buoyancy = nothing)
+
 model = HydrostaticFreeSurfaceModel(; grid, closure,
                                     free_surface = ExplicitFreeSurface(),
                                     momentum_advection = VectorInvariant(),
-                                    coriolis = HydrostaticSphericalCoriolis(),
+                                    coriolis = nothing,
                                     boundary_conditions = (u=u_bcs, v=v_bcs),
                                     tracers = nothing,
                                     buoyancy = nothing)
@@ -43,7 +57,7 @@ model = HydrostaticFreeSurfaceModel(; grid, closure,
 dmodel = HydrostaticFreeSurfaceModel(; grid, closure,
                 free_surface = ExplicitFreeSurface(),
                 momentum_advection = VectorInvariant(),
-                coriolis = HydrostaticSphericalCoriolis(),
+                coriolis = nothing,
                 boundary_conditions = (u=u_bcs, v=v_bcs),
                 tracers = nothing,
                 buoyancy = nothing)
@@ -56,22 +70,9 @@ c = sqrt(g * H) # gravity wave speed
 Δt = 0.1 * Δx / c
 
 function ad_func(model, u_in, u_out, v_in, v_out)
-
     set!(model, u = u_in, v = v_in)
-
-    time_step!(model, Δt)
-
-    # @show temp_u_out
-    # @show temp_v_out
-
-    # u_out = model.velocities.u.data
-    # v_out = model.velocities.v.data
-
-    #@show maximum(u_out)
-   # @show maximum(v_out)
-
+    model.free_surface.η[1, 1, 1] = 2
     return nothing
-
 end
 
 @info "Before taking a time step"
