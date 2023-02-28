@@ -4,6 +4,7 @@
 # everything is fine and works and then can combine them. 
 
 using Enzyme, Plots, SparseArrays, Parameters
+using MKLSparse
 
 using InteractiveUtils
 
