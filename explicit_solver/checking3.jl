@@ -132,12 +132,10 @@ function comp_advection_check(nx, rhs, advec)
 
 end
 
-function main(Tspinup, Trun)
+function main(Tspinup, Trun, nx, ny)
     
 Lx = 3840e3                     # E-W length of the domain [meters]
 Ly = 3840e3                     # N-S length of the domain [meters]
-nx = 5                        # number of cells in the x-direction
-ny = 5                        # number of cells in the y-direction
 
 grid_params = build_grid(Lx, Ly, nx, ny)
 gyre_params = def_params(grid_params)
@@ -165,7 +163,7 @@ etaout = zeros(grid_params.NT)
 u_v_eta = gyre_vector(uout, vout, etaout)
 
 # @profile 
-for t in 1:Tspinup
+@time for t in 1:Tspinup
     advance_check(u_v_eta, grid_params, rhs_terms, gyre_params, interp_ops, grad_ops, advec_ops) 
 end
 
@@ -182,6 +180,6 @@ return u_v_eta, u_v_eta_mat
 
 end
 
-# u_v_eta, u_v_eta_mat = main()
+u_v_eta, u_v_eta_mat = main(365,1,40,40)
 
 # p = heatmap(u_v_eta_mat.eta, dpi = "300")
