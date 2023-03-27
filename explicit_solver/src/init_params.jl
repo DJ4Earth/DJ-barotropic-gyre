@@ -22,16 +22,18 @@ function def_params(grid)
 
     # Zanna/Bolton setup
 
-    nu_A = 128*540/(min(nx, ny))
-    A_h = nu_A * max(dx, dy)^2       # viscosity coefficient [meters^2 / second]
+    nu_A = 128*540/(min(nx, ny))     # harmonic mixing coefficient (chosen so that nu_A = 540 meters^2 / sec when dx = 30 km)
+    A_h = nu_A * max(dx, dy)^2       # biharmonic mixing coefficient coefficient [meters^2 / second]
     rho_c = 1000.0                   # density
-    bottom_drag = 1e-5    # bottom-drag coefficient
-    g = 10.0    # gravity [meters^2 / second]
-    H = 500.0   # depth of the box [meters]
-    omega = 2 * pi / (24 * 3600)
-    R = 6.371e6
-    f0 = 2 * omega * sin(30 * pi / 180)
-    beta = (2 * omega / R) * cos(30 * pi / 180)
+    bottom_drag = 1e-5               # bottom-drag coefficient
+    g = 9.81                         # gravity [meters^2 / second]
+    H = 500.0                        # depth of the box [meters]
+    omega = 2 * pi / (24 * 3600)     # rotation frequency 
+    R = 6.371e6                      # Earth's radius [meters]
+    theta0 = 35                      # Latitude for beta-plane approx
+
+    f0 = 2 * omega * sin(theta0 * pi / 180)                 # Coriolis parameter
+    beta = (2 * omega / R) * cos(theta0 * pi / 180)         # beta of beta-plane approx
 
     # building the vectors that will contain the coriolis force and wind stress (techincally forcings and not parameters I know)
     # come back to this, want to understand 

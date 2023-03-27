@@ -19,6 +19,7 @@ function build_grid(Lx, Ly, nx, ny)
     x = (dx/2):dx:Lx
     y = dy/2:dy:Ly
 
+    # I don't currently return these vectors but might need them later so leaving them here 
     xu = x[1:end-1] .+ dx/2 
     yu = copy(y)
     
@@ -47,12 +48,11 @@ end
 
 # This function allows me to specify the number of days that we want to run the model, 
 # and convert that into the total steps to take 
-function days_to_seconds(Tspinup_days, Trun_days, dt)
+function days_to_seconds(T, dt)
 
-    Tspinup_seconds = Int(ceil((Tspinup_days * 24 * 3600) / dt))
-    Trun_seconds = Int(ceil((Trun_days * 24 * 3600) / dt))
+    Trun_seconds = Int(ceil((T * 24 * 3600) / dt))
 
-    return Tspinup_seconds, Trun_seconds
+    return Trun_seconds
 
 end
 
