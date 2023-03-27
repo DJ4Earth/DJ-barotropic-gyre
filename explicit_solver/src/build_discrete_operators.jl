@@ -4,8 +4,6 @@
 # -- discrete laplacians 
 # throughout we enforce **free-slip** boundary conditions 
 
-using LinearAlgebra
-
 function build_derivs(grid)
 
     dx = grid.dx 
