@@ -16,3 +16,4 @@ explicit_solver/double_notloglog.pdf
 explicit_solver/double.pdf
 explicit_solver/checking3.jl
 explicit_solver/checking3.jl
+Oceananigans.jl/
