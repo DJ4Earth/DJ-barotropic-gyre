@@ -62,8 +62,11 @@ function def_params(grid)
     # Yu = vec([k for k in yu, j in 1:length(xu)]')
     # wind_stress = (-0.1 * sin.(pi * (Yu./Ly))) ./ rho_c
 
-    dt = Int(floor((0.9 * min(dx, dy)) / (sqrt(g * H))))   # CFL condition for dt [seconds]
-    
+    # dt = Int(floor((0.9 * min(dx, dy)) / (sqrt(g * H))))   # CFL condition for dt [seconds]
+
+    # removing the requirement that dt be an integer, not sure why that's there 
+    dt = (0.9 * min(dx, dy)) / (sqrt(g * H))   # CFL condition for dt [seconds]
+
     gyre_params = Params(
     dt,
     g, 
@@ -78,5 +81,16 @@ function def_params(grid)
     )
 
     return gyre_params 
+
+end
+
+
+# This function allows me to specify the number of days that we want to run the model, 
+# and convert that into the total steps to take 
+function days_to_seconds(T, dt)
+
+    Trun = Int(ceil((T * 24 * 3600) / dt))
+
+    return Trun
 
 end

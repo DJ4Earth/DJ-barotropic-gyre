@@ -14,9 +14,9 @@ end
 
 # Combines the contents of gyre_vector with RHS_terms, explicitly needed for Checkpointing.jl
 @with_kw mutable struct SWM_pde
+
     # To initialize struct just need to specify the following, the rest
     # of the entries will follow
-
     Nu::Int
     Nv::Int
     NT::Int
@@ -25,6 +25,16 @@ end
     u::Vector{Float64} = zeros(Nu)
     v::Vector{Float64} = zeros(Nv)
     eta::Vector{Float64} = zeros(NT)
+
+    # Placeholder for cost function computation 
+    J::Float64 = 0.0
+
+    # Placeholder for total steps to integrate for 
+    T::Int 
+
+    # Place to store the data from the high-resolution run and the scaling that we chose 
+    scaling::Int
+    data::Matrix{Float64}
 
     # since everything that matters to the derivative needs to live in a single structure, 
     # this will also contain all of the placeholders for terms on the RHS of the system
@@ -191,6 +201,7 @@ end
 
 # per a suggestion, I'm creating a new structure that will pre-allocate space to operators that only appear 
 # during the timestepping loop (mainly appear in the computation of the RHS equation)
+# this might become obsolete as I add checkpointing, as all of the advection operators matter to the gradient
 @with_kw struct RHS_terms
     
     # To initialize struct just need to specify the following, the rest
