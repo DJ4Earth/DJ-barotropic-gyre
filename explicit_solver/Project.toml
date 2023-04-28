@@ -1,7 +1,6 @@
 [deps]
 Checkpointing = "eb46d486-4f9c-4c3d-b445-a617f2a2f1ca"
 Enzyme = "7da242da-08ed-463a-9acd-ee780be4f1d9"
-EnzymeCore = "f151be2c-9106-41f4-ab19-57ee4f262869"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
 LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
 PProf = "e4faabce-9ead-11e9-39d9-4379958e3056"

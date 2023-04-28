@@ -8,6 +8,8 @@ function def_params(grid)
     Lx = grid.Lx
     Ly = grid.Ly
 
+    NT = grid.NT
+
     x = (dx/2):dx:Lx
     y = dy/2:dy:Ly
 
@@ -20,10 +22,11 @@ function def_params(grid)
     xq = 0:dx:(Lx + dx/2)
     yq = 0:dy:(Ly + dy/2)
 
-    # Zanna/Bolton setup
-
     nu_A = 128*540/(min(nx, ny))     # harmonic mixing coefficient (chosen so that nu_A = 540 meters^2 / sec when dx = 30 km)
     A_h = nu_A * max(dx, dy)^2       # biharmonic mixing coefficient coefficient [meters^2 / second]
+
+    nu = A_h .* ones(NT)             # placing the viscosity coefficient on the tracer grid (cell centers)
+
     rho_c = 1000.0                   # density
     bottom_drag = 1e-5               # bottom-drag coefficient
     g = 9.81                         # gravity [meters^2 / second]
@@ -47,21 +50,6 @@ function def_params(grid)
     ws_sin = 2 .* sin.(pi .* ((Yu .- Ly/2)./Ly)  ) 
     wind_stress = 0.12 .* (ws_cos + ws_sin) ./rho_c
 
-    # MIT GCM setup
-    # A_h = 400.0
-    # H = 5e3
-    # rho_c = 1000.0 
-    # g = 9.81
-    # bottom_drag = 0.0 
-    # beta = 1e-11 
-    # f0 = 1e-4 
-    # Yq = vec([k for k in yq, j in 1:nx+1]')
-    # f(y) = f0 + beta * y
-    # coriolis = vec(f.(Yq)')
-
-    # Yu = vec([k for k in yu, j in 1:length(xu)]')
-    # wind_stress = (-0.1 * sin.(pi * (Yu./Ly))) ./ rho_c
-
     # dt = Int(floor((0.9 * min(dx, dy)) / (sqrt(g * H))))   # CFL condition for dt [seconds]
 
     # removing the requirement that dt be an integer, not sure why that's there 
@@ -74,6 +62,7 @@ function def_params(grid)
     beta, 
     H, 
     A_h,
+    nu, 
     rho_c, 
     bottom_drag,  
     wind_stress, 
@@ -87,9 +76,9 @@ end
 
 # This function allows me to specify the number of days that we want to run the model, 
 # and convert that into the total steps to take 
-function days_to_seconds(T, dt)
+function days_to_seconds(number_of_days, dt)
 
-    Trun = Int(ceil((T * 24 * 3600) / dt))
+    Trun = Int(ceil((number_of_days * 24 * 3600) / dt))
 
     return Trun
 
