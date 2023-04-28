@@ -1,6 +1,6 @@
 # Contains two functions: one that computes the time derivatives and another that 
 # computes the advection term (needed for the time derivatives). Two versions of each function
-# that just depend on what type of structure I'm passing for rhs
+# are defined, each just depends on what type of structure I'm passing for RHS 
 
 function comp_u_v_eta_t(nx::Int, 
         rhs::RHS_terms, 
@@ -28,15 +28,18 @@ function comp_u_v_eta_t(nx::Int,
     rhs.p .= 0.5 .* rhs.kinetic .+ params.g .* rhs.h
 
     # bottom friction
-    rhs.kinetic_sq .= (rhs.kinetic).^(1/2)
+    rhs.kinetic_sq .= sqrt.(rhs.kinetic)
     rhs.bfric_u .= params.bottom_drag .* ((interp.ITu * rhs.kinetic_sq) .* rhs.u1) ./ rhs.h_u
     rhs.bfric_v .= params.bottom_drag .* ((interp.ITv * rhs.kinetic_sq) .* rhs.v1) ./ rhs.h_v
 
     # deal with the advection term 
     comp_advection(nx, rhs, advec)
 
-    rhs.Mu .= params.A_h .* (grad.LLu * rhs.u1)
-    rhs.Mv .= params.A_h .* (grad.LLv * rhs.v1) 
+    # rhs.Mu .= params.A_h .* (grad.LLu * rhs.u1)
+    # rhs.Mv .= params.A_h .* (grad.LLv * rhs.v1) 
+    
+    rhs.Mu .= (interp.ITu * params.nu) .* (grad.LLu * rhs.u1)
+    rhs.Mv .= (interp.ITv * params.nu) .* (grad.LLv * rhs.v1) 
 
     rhs.u_t .= rhs.adv_u .- grad.GTx * rhs.p .+ params.wind_stress ./ rhs.h_u .- rhs.Mu .- rhs.bfric_u
 
@@ -74,15 +77,18 @@ function comp_u_v_eta_t(nx::Int,
     rhs.p .= 0.5 .* rhs.kinetic .+ params.g .* rhs.h
 
     # bottom friction
-    rhs.kinetic_sq .= (rhs.kinetic).^(1/2)
+    rhs.kinetic_sq .= sqrt.(rhs.kinetic)
     rhs.bfric_u .= params.bottom_drag .* ((interp.ITu * rhs.kinetic_sq) .* rhs.u1) ./ rhs.h_u
     rhs.bfric_v .= params.bottom_drag .* ((interp.ITv * rhs.kinetic_sq) .* rhs.v1) ./ rhs.h_v
 
     # deal with the advection term 
     comp_advection(nx, rhs, advec)
 
-    rhs.Mu .= params.A_h .* (grad.LLu * rhs.u1)
-    rhs.Mv .= params.A_h .* (grad.LLv * rhs.v1) 
+    # rhs.Mu .= params.A_h .* (grad.LLu * rhs.u1)
+    # rhs.Mv .= params.A_h .* (grad.LLv * rhs.v1) 
+
+    rhs.Mu .= (interp.ITu * params.nu) .* (grad.LLu * rhs.u1)
+    rhs.Mv .= (interp.ITv * params.nu) .* (grad.LLv * rhs.v1) 
 
     rhs.u_t .= rhs.adv_u .- grad.GTx * rhs.p .+ params.wind_stress ./ rhs.h_u .- rhs.Mu .- rhs.bfric_u
 
