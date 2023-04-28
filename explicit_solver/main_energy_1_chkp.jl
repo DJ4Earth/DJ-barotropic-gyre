@@ -13,7 +13,6 @@ include("init_params.jl")
 include("build_grid.jl")
 include("build_discrete_operators.jl")
 include("advance.jl")
-include("cost_func.jl")
 include("compute_time_deriv.jl")
 
 # This function will setup the structures needed to integrate the model. Comes with default values, but
@@ -76,7 +75,7 @@ end
 
 grid, gyre_params, grad_ops, interp_ops, advec_ops, chkpt_struct_outer = setup(days=days_to_integrate)
 
-snaps = 2000
+snaps = 500
 verbose = 0
 revolve = Revolve{SWM_pde}(chkpt_struct_outer.T, snaps; verbose=verbose)
 
@@ -115,6 +114,7 @@ for t = 1:T
     copyto!(chkpt_struct_new.v, chkpt_struct_new.v0)
     copyto!(chkpt_struct_new.eta, chkpt_struct_new.eta0)
 end
+
 energy_to_check = energy(grid, chkpt_struct_new.u0, chkpt_struct_new.v0)
 
 diffs = []
