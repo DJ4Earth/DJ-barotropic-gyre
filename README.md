@@ -6,4 +6,4 @@ We aim to create a differentiable barotropic gyre model (i.e. just a simple ocea
   
   2. The second direction is a different barotropic gyre model using a fully explicit solver (in this case RK4). This code lives in the folder explicit_solver, and is based on Python code written by Milan Kloewer (found here: https://github.com/milankl/swm). 
   
-The explicit solver code is currently working with both Enzyme and Checkpointing. The file main_energy_1_chkp.jl runs a sample adjoint problem and computes the sensitivity of the final energy with respect to the initial conditions. 
+The explicit solver code is currently working with both Enzyme and Checkpointing. The file main_energy_1_chkp.jl runs a sample adjoint problem and computes the sensitivity of the final energy with respect to the initial conditions. After running a finite difference check is done to see that the derivatives Enzyme computed are correct. Caution should be used when selecting both grid resolution and the number of snaps (checkpoints) for Checkpointing to do, the integration time increases quite a bit with resolution size (in my experience.) 
