@@ -16,11 +16,7 @@ function advance(u_v_eta::gyre_vector,
     ) 
 
     nx = grid.nx 
-    dt = params.dt
-
-    # we now use RK4 as the timestepper, here I'm storing the coefficients needed for this 
-    rk_a = [1/6, 1/3, 1/3, 1/6]
-    rk_b = [1/2, 1/2, 1.]
+    (;dt, rk_a, rk_b) = params
 
     rhs.umid .= u_v_eta.u
     rhs.vmid .= u_v_eta.v
@@ -34,7 +30,7 @@ function advance(u_v_eta::gyre_vector,
     rhs.v1 .= u_v_eta.v
     rhs.eta1 .= u_v_eta.eta
 
-    for j in 1:4
+    @inbounds for j in 1:4
 
         comp_u_v_eta_t(nx, rhs, params, interp, grad, advec)
 

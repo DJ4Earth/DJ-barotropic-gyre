@@ -106,6 +106,8 @@ end
 # Parameters that appear in the model in various places
 struct Params 
     dt::Float64                     # timestep
+    rk_a::Vector{Float64}           # Runge Kutta 4th order coefficients
+    rk_b::Vector{Float64}
     g::Float64                      # gravity
     f0::Float64                     # Coriolis parameter
     beta::Float64                   # Coriolis parameter
