@@ -17,14 +17,14 @@ function comp_u_v_eta_t(nx::Int,
 
     (;ITu, ITv, ITq, IuT, IvT) = interp                 # interpolation operators
     (;Iuv, Ivu, Iqu, Iqv) = interp       
-    (;GTx, GTy, Gux, Guy, Gvx, Gvy, LLu, LLv) = grad    # gradient operators
+    (;GTx, GTy, Gux, Guy, Gvx, Gvy) = grad              # gradient operators
     (;h, h_u, h_v, h_q, U, V, p, q) = rhs               # diagnostic variables
-    (;kinetic, kinetic_sq, Mu, Mv, nu_u, nu_v) = rhs
+    (;kinetic) = rhs
     (;GTx_p, GTy_p, Gux_U, Gvy_V, Gvx_v1, Guy_u1) = rhs
-    (;adv_u, adv_v, bfric_u, bfric_v) = rhs
+    (;adv_u, adv_v) = rhs
     (;IuT_u1, IvT_v1, ITu_ksq,ITv_ksq) = rhs
     (;u_t, v_t, eta_t) = rhs                            # tendencies
-    (;H, coriolis, g, nu, bottom_drag, wind_stress) = params
+    (;H, coriolis, g, wind_stress) = params
 
     h .= eta .+ H 
     
@@ -52,13 +52,6 @@ function comp_u_v_eta_t(nx::Int,
     q .= (coriolis .+ Gvx_v1 .- Guy_u1) ./ h_q 
     p .= 0.5 .* kinetic .+ g .* h
 
-    # bottom friction
-    kinetic_sq .= sqrt.(kinetic)
-    @inplacemul ITu_ksq = ITu * kinetic_sq
-    @inplacemul ITv_ksq = ITv * kinetic_sq
-    bfric_u .= bottom_drag .* ITu_ksq .* u ./ h_u
-    bfric_v .= bottom_drag .* ITv_ksq .* v ./ h_v
-
     # deal with the advection term 
     # comp_advection(nx, rhs, advec)    # Arakawa and Lamb advection scheme
 
@@ -73,21 +66,13 @@ function comp_u_v_eta_t(nx::Int,
     # @inplacemul adv_v = Iqv * q  # v-component -qhu
     adv_v .*= .-U_v
 
-    # diffusion term ν∇⁴(u,v)
-    @inplacemul nu_u = ITu * nu
-    @inplacemul nu_v = ITv * nu
-    @inplacemul Mu = LLu * u
-    @inplacemul Mv = LLv * v
-    Mu .*= nu_u
-    Mv .*= nu_v
-
     # bernoulli gradient ∇p = ∇(1/2(u²+v² + gh))
     @inplacemul GTx_p = GTx * p
     @inplacemul GTy_p = GTy * p
 
     # momentum equations
-    u_t .= adv_u .- GTx_p .+ wind_stress ./ h_u .- Mu .- bfric_u
-    v_t .= adv_v .- GTy_p .- Mv .- bfric_v 
+    u_t .= adv_u .- GTx_p .+ wind_stress ./ h_u
+    v_t .= adv_v .- GTy_p
 
     # continuity equations
     @inplacemul Gux_U = Gux * U    # volume flux divergence dUdx + dVdy
@@ -96,6 +81,49 @@ function comp_u_v_eta_t(nx::Int,
 
     return nothing
 end 
+
+function dissipative_terms!(nx::Int, 
+        rhs::RHS_terms, 
+        params::Params, 
+        interp::Interps, 
+        grad::Derivatives, 
+        advec::Advection
+    )
+
+    # unpack stuff
+    u = rhs.u0                          # calculate based on prognostics at
+    v = rhs.v0                          # t + dt of the non-dissipative RHS
+
+    (;ITu, ITv) = interp                # interpolation operators   
+    (;LLu, LLv) = grad                  # gradient operators
+    (;h_u, h_v) = rhs                   # diagnostic variables
+    (;kinetic, kinetic_sq, Mu, Mv, nu_u, nu_v) = rhs
+    (;bfric_u, bfric_v) = rhs
+    (;ITu_ksq,ITv_ksq) = rhs
+    (;u_t, v_t) = rhs                   # tendencies
+    (;nu, bottom_drag) = params
+
+    # bottom friction
+    kinetic_sq .= sqrt.(kinetic)
+    @inplacemul ITu_ksq = ITu * kinetic_sq
+    @inplacemul ITv_ksq = ITv * kinetic_sq
+    bfric_u .= bottom_drag .* ITu_ksq .* u ./ h_u
+    bfric_v .= bottom_drag .* ITv_ksq .* v ./ h_v
+
+    # diffusion term ν∇⁴(u,v)
+    @inplacemul nu_u = ITu * nu
+    @inplacemul nu_v = ITv * nu
+    @inplacemul Mu = LLu * u
+    @inplacemul Mv = LLv * v
+    Mu .*= nu_u
+    Mv .*= nu_v
+
+    # tendencies for bottom friction and diffusion
+    u_t .= .- Mu .- bfric_u
+    v_t .= .- Mv .- bfric_v 
+
+    return nothing
+end
 
 function comp_u_v_eta_t(nx::Int, 
         rhs::SWM_pde, 

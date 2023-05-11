@@ -46,6 +46,11 @@ function advance(u_v_eta::gyre_vector,
 
     end
 
+    # Diffusion and bottom friction as Euler forward
+    dissipative_terms!(nx, rhs, params, interp, grad, advec)
+    rhs.u0 .+= dt .* rhs.u_t
+    rhs.v0 .+= dt .* rhs.v_t
+
     # @assert all(x -> x < 7.0, rhs.u0)
     # @assert all(x -> x < 7.0, rhs.v0)
     # @assert all(x -> x < 7.0, rhs.eta0)
@@ -147,8 +152,8 @@ function integrate(T, nx, ny; Lx = 3840e3, Ly = 3840e3)
     
     # u_v_eta_mat = vec_to_mat(u_v_eta.u, u_v_eta.v, u_v_eta.eta, grid_params)
     
-    # return u_v_eta
-    return (u_v_eta, grid_params, rhs_terms, gyre_params, interp_ops, grad_ops, advec_ops)
+    return u_v_eta
+    # return (u_v_eta, grid_params, rhs_terms, gyre_params, interp_ops, grad_ops, advec_ops)
 end
 
 # ****IMPORTANT**** not yet sure if I'm moving between high and low res grids, need to check with Patrick
