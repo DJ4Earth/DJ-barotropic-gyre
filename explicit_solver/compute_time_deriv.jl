@@ -16,6 +16,7 @@ function comp_u_v_eta_t(nx::Int,
     eta = rhs.eta1
 
     (;ITu, ITv, ITq, IuT, IvT) = interp                 # interpolation operators
+    (;Iuv, Ivu, Iqu, Iqv) = interp       
     (;GTx, GTy, Gux, Guy, Gvx, Gvy, LLu, LLv) = grad    # gradient operators
     (;h, h_u, h_v, h_q, U, V, p, q) = rhs               # diagnostic variables
     (;kinetic, kinetic_sq, Mu, Mv, nu_u, nu_v) = rhs
@@ -26,10 +27,12 @@ function comp_u_v_eta_t(nx::Int,
     (;H, coriolis, g, nu, bottom_drag, wind_stress) = params
 
     h .= eta .+ H 
-
+    
     @inplacemul h_q = ITq * h
     @inplacemul h_u = ITu * h
     @inplacemul h_v = ITv * h
+    U .= u .* h_u                  # volume fluxes U,V
+    V .= v .* h_v 
     
     # kinetic energy u² + v²
     u²_T, u² = IuT_u1, ITu_ksq      # reuse and rename arrays for u²
@@ -57,7 +60,18 @@ function comp_u_v_eta_t(nx::Int,
     bfric_v .= bottom_drag .* ITv_ksq .* v ./ h_v
 
     # deal with the advection term 
-    # comp_advection(nx, rhs, advec)
+    # comp_advection(nx, rhs, advec)    # Arakawa and Lamb advection scheme
+
+    # Sadourny, 1975 enstrophy conserving advection scheme
+    V_u = ITu_ksq                # reuse and rename array
+    @inplacemul V_u = Ivu * V
+    @inplacemul adv_u = Iqu * q  # u-component qhv
+    adv_u .*= V_u
+
+    U_v = ITv_ksq                # reuse and rename array
+    @inplacemul U_v = Iuv * U         
+    # @inplacemul adv_v = Iqv * q  # v-component -qhu
+    adv_v .*= .-U_v
 
     # diffusion term ν∇⁴(u,v)
     @inplacemul nu_u = ITu * nu
@@ -76,8 +90,6 @@ function comp_u_v_eta_t(nx::Int,
     v_t .= adv_v .- GTy_p .- Mv .- bfric_v 
 
     # continuity equations
-    U .= u .* h_u                  # volume fluxes U,V
-    V .= v .* h_v 
     @inplacemul Gux_U = Gux * U    # volume flux divergence dUdx + dVdy
     @inplacemul Gvy_V = Gvy * V
     @. eta_t = -(Gux_U + Gvy_V)
