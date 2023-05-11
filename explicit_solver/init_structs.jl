@@ -257,8 +257,8 @@ end
     bfric_u::Vector{Float64} = zeros(Nu)
     bfric_v::Vector{Float64} = zeros(Nv)
 
-    LLu_u1::Vector{Float64} = zeros(Nu)
-    LLv_v1::Vector{Float64} = zeros(Nv)
+    nu_u::Vector{Float64} = zeros(Nu)
+    nu_v::Vector{Float64} = zeros(Nv)
     Mu::Vector{Float64} = zeros(Nu)
     Mv::Vector{Float64} = zeros(Nv)
 
