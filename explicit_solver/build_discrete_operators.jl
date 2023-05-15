@@ -155,7 +155,7 @@ function build_interp(grid, grad_ops)
     Iqu = (Iqu1 + Iqu2)[index3, :]
 
     # u-grid to q-grid 
-    Iuq = copy(Iqu)'
+    Iuq = copy(Iqu')
     Iuq[2:nx, 1:nx-1] .= spdiagm(ones(nx-1))
     Iuq[end-nx+1:end-1, end-nx+2:end] .= spdiagm(ones(nx-1))
 
@@ -168,7 +168,7 @@ function build_interp(grid, grad_ops)
     Iqv = (Iqv1 + Iqv2)[index4, :]
 
     # v-grid to q-grid 
-    Ivq = copy(Iqv)'
+    Ivq = copy(Iqv')
 
     # I need a way to find the indices of the elements that correspond to the boundary,
     # and this is my probably inefficient way of doing this. If there's a better way
@@ -217,7 +217,8 @@ function build_interp(grid, grad_ops)
         end
     end
 
-    interp_ops = Interps(Ivu, 
+    interp_ops = Interps(
+    Ivu, 
     Iuv, 
     IqT, 
     IuT, 
@@ -225,8 +226,8 @@ function build_interp(grid, grad_ops)
     ITu, 
     ITv, 
     Iqu, 
+    Iqv,
     Iuq, 
-    Iqv, 
     Ivq, 
     ITq
     )
