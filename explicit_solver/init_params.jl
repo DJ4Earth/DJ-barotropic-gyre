@@ -55,14 +55,8 @@ function def_params(grid)
     # removing the requirement that dt be an integer, not sure why that's there 
     dt = (0.9 * min(dx, dy)) / (sqrt(g * H))   # CFL condition for dt [seconds]
 
-    # we now use RK4 as the timestepper, here I'm storing the coefficients needed for this 
-    rk_a = [1/6, 1/3, 1/3, 1/6]
-    rk_b = [1/2, 1/2, 1.]
-
     gyre_params = Params(
     dt,
-    rk_a,
-    rk_b,
     g, 
     f0, 
     beta, 

@@ -73,20 +73,20 @@ function build_derivs(grid)
     LLv = Lv * Lv 
 
     grad_ops = Derivatives(
-    GTx, 
-    GTy, 
-    Gux, 
-    Guy, 
-    Gvx, 
-    Gvy, 
-    Gqy, 
-    Gqx, 
-    Lu, 
-    Lv, 
-    LT, 
-    Lq,
-    LLu,
-    LLv
+        GTx, 
+        GTy, 
+        Gux, 
+        Guy, 
+        Gvx, 
+        Gvy, 
+        Gqy, 
+        Gqx, 
+        Lu, 
+        Lv, 
+        LT, 
+        Lq,
+        LLu,
+        LLv
     )
     
     return grad_ops
@@ -226,7 +226,7 @@ function build_interp(grid, grad_ops)
     ITu, 
     ITv, 
     Iqu, 
-    Iqv,
+    Iqv, 
     Iuq, 
     Ivq, 
     ITq
@@ -368,24 +368,4 @@ function build_advec(grid)
 
     return advec_ops
 
-end
-
-"""
-    @inplacemul c = A*b
-
-Macro to translate c = A*b with `A::SparseMatrixCSC`, `b` and `c` `Vector`s into
-`SparseArrays.mul!(c,A,b,true,false)` to perform the sparse matrix - 
-dense vector multiplication in-place."""
-macro inplacemul(ex)
-    @assert ex.head == :(=) "@inplacemul requires expression a = b*c"
-    @assert ex.args[2].args[1] == :(*) "@inplacemul requires expression a = b*c"
-    
-    return quote
-        local c = $(esc(ex.args[1]))              # output dense vector
-        local A = $(esc(ex.args[2].args[2]))      # input sparse matrix
-        local b = $(esc(ex.args[2].args[3]))      # input dense vector
-
-        # c = β*c + α*A*b, with α=1, β=0 so that c = A*b
-        SparseArrays.mul!(c,A,b,true,false)
-    end
 end
