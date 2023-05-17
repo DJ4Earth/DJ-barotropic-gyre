@@ -100,7 +100,11 @@ function comp_u_v_eta_t(nx::Int,
 
 end 
 
-function comp_advection(nx::Int, rhs::SWM_pde, advec::Advection)
+function comp_advection(
+    nx::Int, 
+    rhs::SWM_pde, 
+    advec::Advection
+)
 
     rhs.AL1q .= advec.AL1 * rhs.q 
     rhs.AL2q .= advec.AL2 * rhs.q 
@@ -127,29 +131,29 @@ function comp_advection(nx::Int, rhs::SWM_pde, advec::Advection)
 
 end
 
-function comp_advection(nx::Int, rhs::RHS_terms, advec::Advection)
+# function comp_advection(nx::Int, rhs::RHS_terms, advec::Advection)
 
-    rhs.AL1q .= advec.AL1 * rhs.q 
-    rhs.AL2q .= advec.AL2 * rhs.q 
+#     rhs.AL1q .= advec.AL1 * rhs.q 
+#     rhs.AL2q .= advec.AL2 * rhs.q 
 
-    AL1q_au = @view rhs.AL1q[1:end-nx]
-    AL2q_bu = @view rhs.AL2q[nx+1:end]
-    AL2q_cu = @view rhs.AL2q[1:end-nx]
-    AL1q_du = @view rhs.AL1q[nx+1:end]
+#     AL1q_au = @view rhs.AL1q[1:end-nx]
+#     AL2q_bu = @view rhs.AL2q[nx+1:end]
+#     AL2q_cu = @view rhs.AL2q[1:end-nx]
+#     AL1q_du = @view rhs.AL1q[nx+1:end]
 
-    AL1q_av = @view rhs.AL1q[advec.index_av]
-    AL2q_bv = @view rhs.AL2q[advec.index_bv]
-    AL2q_cv = @view rhs.AL2q[advec.index_cv]
-    AL1q_dv = @view rhs.AL1q[advec.index_dv]
+#     AL1q_av = @view rhs.AL1q[advec.index_av]
+#     AL2q_bv = @view rhs.AL2q[advec.index_bv]
+#     AL2q_cv = @view rhs.AL2q[advec.index_cv]
+#     AL1q_dv = @view rhs.AL1q[advec.index_dv]
 
-    rhs.adv_u .= advec.Seur * (advec.ALeur * rhs.q .* rhs.U) .+ advec.Seul * (advec.ALeul * rhs.q .* rhs.U) .+
-    advec.Sau * (AL1q_au .* rhs.V) .+ advec.Sbu * (AL2q_bu .* rhs.V) .+ 
-    advec.Scu * (AL2q_cu .* rhs.V) .+ advec.Sdu * (AL1q_du .* rhs.V)
+#     rhs.adv_u .= advec.Seur * (advec.ALeur * rhs.q .* rhs.U) .+ advec.Seul * (advec.ALeul * rhs.q .* rhs.U) .+
+#     advec.Sau * (AL1q_au .* rhs.V) .+ advec.Sbu * (AL2q_bu .* rhs.V) .+ 
+#     advec.Scu * (AL2q_cu .* rhs.V) .+ advec.Sdu * (AL1q_du .* rhs.V)
 
-    rhs.adv_v .= advec.Spvu * ((advec.ALpvu * rhs.q) .* rhs.V) .+ advec.Spvd * ((advec.ALpvd * rhs.q) .* rhs.V) .-
-    advec.Sav * (AL1q_av .* rhs.U) .- advec.Sbv * (AL2q_bv .* rhs.U) .- 
-    advec.Scv * (AL2q_cv .* rhs.U) .- advec.Sdv * (AL1q_dv .* rhs.U)
+#     rhs.adv_v .= advec.Spvu * ((advec.ALpvu * rhs.q) .* rhs.V) .+ advec.Spvd * ((advec.ALpvd * rhs.q) .* rhs.V) .-
+#     advec.Sav * (AL1q_av .* rhs.U) .- advec.Sbv * (AL2q_bv .* rhs.U) .- 
+#     advec.Scv * (AL2q_cv .* rhs.U) .- advec.Sdv * (AL1q_dv .* rhs.U)
 
-    return nothing
+#     return nothing
 
-end
+# end
