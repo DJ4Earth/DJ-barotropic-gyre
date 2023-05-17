@@ -106,6 +106,8 @@ end
 # Parameters that appear in the model in various places
 struct Params 
     dt::Float64                     # timestep
+    rk_a::Vector{Float64}           # Runge Kutta 4th order coefficients
+    rk_b::Vector{Float64}
     g::Float64                      # gravity
     f0::Float64                     # Coriolis parameter
     beta::Float64                   # Coriolis parameter
@@ -255,8 +257,8 @@ end
     bfric_u::Vector{Float64} = zeros(Nu)
     bfric_v::Vector{Float64} = zeros(Nv)
 
-    LLu_u1::Vector{Float64} = zeros(Nu)
-    LLv_v1::Vector{Float64} = zeros(Nv)
+    nu_u::Vector{Float64} = zeros(Nu)
+    nu_v::Vector{Float64} = zeros(Nv)
     Mu::Vector{Float64} = zeros(Nu)
     Mv::Vector{Float64} = zeros(Nv)
 
