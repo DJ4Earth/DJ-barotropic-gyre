@@ -22,9 +22,10 @@ function def_params(grid)
     xq = 0:dx:(Lx + dx/2)
     yq = 0:dy:(Ly + dy/2)
 
-    nu_A = 128*540/(min(nx, ny))     # harmonic mixing coefficient (chosen so that nu_A = 540 meters^2 / sec when dx = 30 km)
-    A_h = nu_A * max(dx, dy)^2       # biharmonic mixing coefficient coefficient [meters^2 / second]
+    # nu_A = 128*540/(min(nx, ny))     # harmonic mixing coefficient (chosen so that nu_A = 540 meters^2 / sec when dx = 30 km)
+    # A_h = nu_A * max(dx, dy)^2       # biharmonic mixing coefficient coefficient [meters^2 / second]
 
+    A_h = compute_viscosity(nx, ny)
     nu = A_h .* ones(NT)             # placing the viscosity coefficient on the tracer grid (cell centers)
 
     rho_c = 1000.0                   # density
@@ -50,10 +51,12 @@ function def_params(grid)
     ws_sin = 2 .* sin.(pi .* ((Yu .- Ly/2)./Ly)  ) 
     wind_stress = 0.12 .* (ws_cos + ws_sin) ./rho_c
 
-    # dt = Int(floor((0.9 * min(dx, dy)) / (sqrt(g * H))))   # CFL condition for dt [seconds]
-
     # removing the requirement that dt be an integer, not sure why that's there 
     dt = (0.9 * min(dx, dy)) / (sqrt(g * H))   # CFL condition for dt [seconds]
+
+    # we use RK4 as the timestepper, here I'm storing the coefficients needed for this 
+    rk_a = [1/6, 1/3, 1/3, 1/6]
+    rk_b = [1/2, 1/2, 1.]
 
     gyre_params = Params(
     dt,
@@ -66,7 +69,9 @@ function def_params(grid)
     rho_c, 
     bottom_drag,  
     wind_stress, 
-    coriolis
+    coriolis,
+    rk_a,
+    rk_b
     )
 
     return gyre_params 
@@ -81,5 +86,15 @@ function days_to_seconds(number_of_days, dt)
     Trun = Int(ceil((number_of_days * 24 * 3600) / dt))
 
     return Trun
+
+end
+
+# I've decided to add a function that computes the viscosity coefficient based on 
+# the grid, so that in the future I can more easily edit how this parameter
+# is chosen. Technically possible to leave this in init_params, but nice to have 
+# it here
+function compute_viscosity(nx, ny)
+
+    return (128 * 540) / min(nx, ny)
 
 end
