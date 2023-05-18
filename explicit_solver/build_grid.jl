@@ -48,24 +48,24 @@ end
 
 # This function will just serve to take the vectors containing state information 
 # and transform them to matrices 
-function vec_to_mat(u, v, eta, grid)
+function vec_to_mat(states, grid)
 
     state_matrices = gyre_matrix(
-        reshape(u, grid.nx-1, grid.ny)',
-        reshape(v, grid.nx, grid.ny-1)',
-        reshape(eta, grid.nx, grid.ny)'
+        reshape(states.u, grid.nx-1, grid.ny)',
+        reshape(states.v, grid.nx, grid.ny-1)',
+        reshape(states.eta, grid.nx, grid.ny)'
     )
 
     return state_matrices
 
 end
 
-function mat_to_vec(um, vm, etam, grid)
+function mat_to_vec(states_mat, grid)
 
     state_vectors = gyre_vector(
-        reshape(um', grid.Nu),
-        reshape(vm', grid.Nv),
-        reshape(etam', grid.NT)
+        reshape(states_mat.u', grid.Nu),
+        reshape(states_mat.v', grid.Nv),
+        reshape(states_mat.eta', grid.NT)
     )
 
     return state_vectors 
