@@ -4,20 +4,20 @@
 # This one will try to use Enzyme + checkpointing for an energy sensitivity
 # similar to the Burgers equation
 
-using Plots, SparseArrays, Parameters, UnPack
-using JLD2, LinearAlgebra
-using Enzyme, Checkpointing, Zygote 
+# using Plots, SparseArrays, Parameters, UnPack
+# using JLD2, LinearAlgebra
+# using Enzyme, Checkpointing, Zygote 
 
-include("init_structs.jl")
-include("init_params.jl")
-include("build_grid.jl")
-include("build_discrete_operators.jl")
-include("advance.jl")
-include("cost_func.jl")
-include("compute_time_deriv.jl")
-include("temp.jl")
+# include("init_structs.jl")
+# include("init_params.jl")
+# include("build_grid.jl")
+# include("build_discrete_operators.jl")
+# include("advance.jl")
+# include("cost_func.jl")
+# include("compute_time_deriv.jl")
+# include("temp.jl")
 
-Enzyme.API.runtimeActivity!(true)
+# Enzyme.API.runtimeActivity!(true)
 
 # This function will setup the structures needed to integrate the model. Comes with default values, but
 # these can be specified if desired. 
@@ -25,7 +25,13 @@ Enzyme.API.runtimeActivity!(true)
 # u0, v0, eta0. If these are specified, the arguments nx and ny should also be adjusted to match the 
 # dimensions of the initial conditions. I don't know how to force this to happen, so for now just need
 # to remember 
-function setup(;days = 1, nx = 30, ny = 30, Lx = 3840e3, Ly = 3840e3)
+function setup(;
+    days = 1, 
+    nx = 30, 
+    ny = 30, 
+    Lx = 3840e3, 
+    Ly = 3840e3
+    )
 
     grid = build_grid(Lx, Ly, nx, ny)
     params = def_params(grid)
@@ -148,8 +154,8 @@ function run_checkpointing(days_to_integrate, nx, ny, snaps)
 
 end
 
-days_to_integrate = 10
-@time denergy = run_checkpointing(days_to_integrate, 10, 10, 2)
+# days_to_integrate = 10
+# @time denergy = run_checkpointing(days_to_integrate, 10, 10, 2)
 
 # gradient check with the results from checkpointing - passed
 
@@ -161,7 +167,9 @@ days_to_integrate = 10
 
 # use_to_check = du[88]
 
-# T = days_to_seconds(days_to_integrate, gyre_params.dt)
+# grid, params, grad, interp, advec, states_rhs = ExplicitSolver.setup(days=days_to_integrate, nx=128, ny=128)
+
+# T = days_to_seconds(days_to_integrate, params.dt)
 
 # chkpt_struct_new = SWM_pde(Nu = grid.Nu, 
 #     Nv = grid.Nv,
