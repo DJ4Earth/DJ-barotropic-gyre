@@ -43,6 +43,12 @@ end
     # current timestep
     t::Int = 0
 
+    # entry in data vector 
+    j::Int = 1
+
+    # for animation 
+    k::Int = 0
+
     # since everything that matters to the derivative needs to live in a single structure, 
     # this will also contain all of the placeholders for terms on the RHS of the system
 

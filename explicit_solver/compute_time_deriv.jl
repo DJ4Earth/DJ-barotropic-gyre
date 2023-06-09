@@ -1,6 +1,6 @@
-# Contains two functions: one that computes the time derivatives and another that 
-# computes the advection term (needed for the time derivatives). Two versions of each function
-# are defined, each just depends on what type of structure I'm passing for RHS 
+# Contains two functions, the first of which computes the dissipative terms, namely
+# it computes the bottom friction and diffusion terms and applies these to the time derivatives
+# The second function 
 
 function dissipative_terms!(nx::Int, 
     rhs::SWM_pde, 
@@ -66,7 +66,7 @@ eta = states_rhs.eta1
 (;kinetic) = states_rhs
 (;GTx_p, GTy_p, Gux_U, Gvy_V, Gvx_v1, Guy_u1) = states_rhs
 (;adv_u, adv_v) = states_rhs
-(;IuT_u1, IvT_v1, ITu_ksq,ITv_ksq) = states_rhs
+(;IuT_u1, IvT_v1, ITu_ksq, ITv_ksq) = states_rhs
 (;u_t, v_t, eta_t) = states_rhs                            # tendencies
 (;H, coriolis, g, wind_stress) = params
 
@@ -96,8 +96,8 @@ kinetic .= u2_T .+ v2_T
 q .= (coriolis .+ Gvx_v1 .- Guy_u1) ./ h_q 
 p .= 0.5 .* kinetic .+ g .* h
 
-# For computing AL advection
-# comp_advection(nx, rhs, advec)    
+# Arakawa and Lamb advection scheme
+# comp_ALadvection(nx, states_rhs, advec)    
 
 # Sadourny, 1975 enstrophy conserving advection scheme
 V_u = ITu_ksq                # reuse and rename array
@@ -110,7 +110,7 @@ U_v = ITv_ksq                # reuse and rename array
 @inplacemul adv_v = Iqv * q  # v-component -qhu
 adv_v .*= .-U_v
 
-# bernoulli gradient ∇p = ∇(1/2(u²+v² + gh))
+# Bernoulli gradient ∇p = ∇(1/2(u²+v² + gh))
 @inplacemul GTx_p = GTx * p
 @inplacemul GTy_p = GTy * p
 
@@ -127,7 +127,7 @@ return nothing
 
 end 
 
-function comp_advection(nx::Int, rhs::SWM_pde, advec::Advection)
+function comp_ALadvection(nx::Int, rhs::SWM_pde, advec::Advection)
 
 rhs.AL1q .= advec.AL1 * rhs.q 
 rhs.AL2q .= advec.AL2 * rhs.q 
