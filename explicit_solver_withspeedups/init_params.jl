@@ -1,14 +1,8 @@
 # this function will define all of the desired parameters and return them in a structure for use in other locations
 function def_params(grid)
 
-    nx = grid.nx
-    ny = grid.ny
-    dx = grid.dx 
-    dy = grid.dx
-    Lx = grid.Lx
-    Ly = grid.Ly
-
-    NT = grid.NT
+    @unpack nx, ny, dx, dy, Lx, Ly = grid 
+    @unpack NT = grid 
 
     x = (dx/2):dx:Lx
     y = dy/2:dy:Ly
@@ -21,9 +15,6 @@ function def_params(grid)
     
     xq = 0:dx:(Lx + dx/2)
     yq = 0:dy:(Ly + dy/2)
-
-    # nu_A = 128*540/(min(nx, ny))     # harmonic mixing coefficient (chosen so that nu_A = 540 meters^2 / sec when dx = 30 km)
-    # A_h = nu_A * max(dx, dy)^2       # biharmonic mixing coefficient coefficient [meters^2 / second]
 
     A_h = compute_viscosity(nx, ny, dx, dy)
     nu = A_h .* ones(NT)             # placing the viscosity coefficient on the tracer grid (cell centers)
