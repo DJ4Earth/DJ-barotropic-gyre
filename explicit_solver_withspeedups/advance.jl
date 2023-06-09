@@ -92,107 +92,57 @@ function integrate(days, nx, ny; Lx = 3840e3, Ly = 3840e3)
         T = T
     )
     
-    @time for t in 1:T
+    for t in 1:states_rhs.T
+
         advance(states_rhs, grid, params, interp, grad, advec)
+
         copyto!(states_rhs.u, states_rhs.u0)
         copyto!(states_rhs.v, states_rhs.v0)
         copyto!(states_rhs.eta, states_rhs.eta0)
+        
     end
         
     return states_rhs
 
 end
 
-# ****IMPORTANT**** not yet sure if I'm moving between high and low res grids, need to check with Patrick
-# and come back here if there are issues with how I did it
+function integrate(u0, v0, eta0, days, nx, ny; Lx = 3840e3, Ly = 3840e3)                 
 
-# This function needs to be given 
-#           days - how many days to integrate the model for
-#           nx_lowres, ny_lowres - grid resolution (number of cells in the x and y directions
-#                    respectively) of the courser grid
-#           Lx, Ly - size of the domain, have a default value but can set 
-#                    manually if needed 
-#           data_steps - which timesteps we want to store data at
-# Theoretically, we should only ever run this function *once*, from there 
-# the data points will be stored as a JLD2 data file 
-function create_data(days, nx_lowres, ny_lowres, data_steps; scaling = 4, Lx = 3840e3, Ly = 3840e3)
+    grid = build_grid(Lx, Ly, nx, ny)
+    params = def_params(grid)
 
-nx_highres = nx_lowres * scaling
-ny_highres = ny_lowres * scaling 
+    # building discrete operators
+    grad = build_derivs(grid)            # discrete gradient operators
+    interp = build_interp(grid, grad)    # discrete interpolation operators (travels between grids)
+    advec = build_advec(grid)
 
-grid_highres = build_grid(Lx, Ly, nx_highres, ny_highres)
-params = def_params(grid_highres)
+    Nu = grid.Nu
+    Nv = grid.Nv
+    NT = grid.NT
+    Nq = grid.Nq 
 
-# building discrete operators
-grad = build_derivs(grid_highres)            # discrete gradient operators
-interp = build_interp(grid_highres, grad)    # discrete interpolation operators (travels between grids)
-advec = build_advec(grid_highres)
+    T = days_to_seconds(days, params.dt)
 
-Trun = days_to_seconds(days, params.dt)
+    states_rhs = SWM_pde(Nu = Nu, 
+        Nv = Nv,
+        NT = NT, 
+        Nq = Nq, 
+        T = T,
+        u = u0,
+        v = v0,
+        eta = eta0
+    )
+    
+    @btime for t in 1:T
 
-Nu = grid_highres.Nu
-Nv = grid_highres.Nv
-NT = grid_highres.NT
-Nq = grid_highres.Nq 
-
-u_v_eta_rhs = SWM_pde(Nu = Nu, 
-    Nv = Nv,
-    NT = NT, 
-    Nq = Nq
-)
-
-# In order to compare high res data to low res velocities I'm going to (1) interpolate 
-# the velocities to the T-grid (cell centers) (2) average the high
-# res data points down to the low res grid (3) interpolate the low 
-# res results to the cell centers. Then I'll be comparing apples to apples (hopefully)
-# will check with Patrick that this is a valid method 
-
-# Building the averaging operator needed for step (2) above
-diag1 = (1 / scaling^2) .* ones(NT)
-M = spdiagm(NT, NT, 0.0 .* diag1)
-for k = 1:scaling
-    for j = 1:scaling
-        M += spdiagm(NT, NT, j+(k-1)*nx_highres - 1 => diag1[1:end-j-(k-1)*nx_highres + 1])
-    end
-end
-M = M[1:scaling:end, :]
-index1 = 1:nx_lowres*ny_lowres*scaling
-for k in 1:ny_lowres
-    index1 = filter(x -> x ∉ [j for j in ((k-1)*nx_lowres*scaling+nx_lowres+1):((k-1)*nx_lowres*scaling+nx_lowres*scaling)], index1)
-end
-M = M[index1, :]
-
-# initializing where to store the data 
-data = zeros(grid_highres.Nu + grid_highres.Nv + grid_highres.NT, length(data_steps))
-
-# the steps where we want data in the high res model correspond to (roughly) scaling * t for t 
-# in the low res model. for simplicity I'm going to keep the times in the low res where I want to have 
-# data and then just scale them in the for loop to find corresponding high res data points  
-
-# for an initial effort I'm just going to run pretty course resolution models for both the high and low res 
-
-if 1 in scaling .* data_steps 
-    data[:, 1] .= [u_v_eta_rhs.u; u_v_eta_rhs.v; u_v_eta_rhs.eta]
-    j = 2
-else
-    j = 1
-end
-
-for t in 2:Trun
-
-    advance(u_v_eta_rhs, grid_highres, params, interp, grad, advec) 
-
-    if t in scaling .* data_steps 
-        data[:, j] .= [u_v_eta_rhs.u; u_v_eta_rhs.v; u_v_eta_rhs.eta]
-        j += 1
-    end
-
-    copyto!(u_v_eta_rhs.u, u_v_eta_rhs.u0)
-    copyto!(u_v_eta_rhs.v, u_v_eta_rhs.v0)
-    copyto!(u_v_eta_rhs.eta, u_v_eta_rhs.eta0)
+        advance(states_rhs, grid, params, interp, grad, advec)
+        copyto!(states_rhs.u, states_rhs.u0)
+        copyto!(states_rhs.v, states_rhs.v0)
+        copyto!(states_rhs.eta, states_rhs.eta0)
+        
+    end 
+        
+    return states_rhs
 
 end
 
-return data, M
-
-end
