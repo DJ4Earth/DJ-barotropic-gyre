@@ -1,12 +1,14 @@
 # using Plots, SparseArrays, Parameters, UnPack
 # using JLD2, LinearAlgebra
 # using Enzyme, Checkpointing, Zygote 
+# # using Profile, PProf
 
 # include("init_structs.jl")
 # include("init_params.jl")
 # include("build_grid.jl")
 # include("build_discrete_operators.jl")
 # include("advance.jl")
+# include("cost_func.jl")
 # include("compute_time_deriv.jl")
 # include("temp.jl")
 
@@ -22,7 +24,7 @@
 # Example usage:
 # (1) if there are no initial conditions to specify (starting the model from rest)
 # include("ExplicitSolver.jl")
-# days_to_integrate = 30 
+# days_to_integrate = 30
 # nx = 128
 # ny = 128
 # snaps = 80
@@ -30,7 +32,7 @@
 # 
 # (2) if there are non-zero initial condtions (starting from a spun-up state)
 # include("ExplicitSolver.jl")
-# @load "./initcond_plus_data/states_nx128_ny128_10year_060523.jld2" states_nx128_ny128_10year_060523
+# @load "./initcond/states_nx128_ny128_10year_060523.jld2" states_nx128_ny128_10year_060523
 # u0 = states_nx128_ny128_10yr_060523.u 
 # v0 = states_nx128_ny128_10yr_060523.v
 # eta0 = states_nx128_ny128_10yr_060523.eta
@@ -188,7 +190,6 @@ function run_checkpointing_energyex(u0, v0, eta0, days, nx, ny, snaps)
         grad_ops, 
         advec_ops
     )
-
 
     return denergy
 
